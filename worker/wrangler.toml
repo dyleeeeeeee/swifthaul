@@ -1,0 +1,19 @@
+name = "swifthaul-api"
+main = "src/index.ts"
+compatibility_date = "2024-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "swifthaul-db"
+database_id = "YOUR_D1_DATABASE_ID"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_NAMESPACE_ID"
+
+[vars]
+ENVIRONMENT = "production"
+
+# JWT_SECRET must be set as a secret:
+# wrangler secret put JWT_SECRET
