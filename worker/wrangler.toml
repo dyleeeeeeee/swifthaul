@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "swifthaul-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "cb4013e6-299c-4ef0-8a71-1d85586dadea"
 
 [[kv_namespaces]]
 binding = "CACHE"

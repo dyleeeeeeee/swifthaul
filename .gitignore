@@ -1,0 +1,10 @@
+# Root repo ignores
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+.wrangler/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

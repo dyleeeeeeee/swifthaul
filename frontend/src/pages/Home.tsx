@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, useInView } from 'framer-motion'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import {
   Zap, Search, Package, Globe, Clock, ArrowRight,
   Truck, Plane, Ship, Thermometer, AlertTriangle, Star,
-  BookOpen, MapPin, CheckCircle
+  BookOpen, MapPin, CheckCircle,
+  Play, Pause, Volume2, VolumeX, Maximize2
 } from 'lucide-react'
 import { useCountUp } from '../hooks/useCountUp'
 import Footer from '../components/layout/Footer'
@@ -63,6 +64,211 @@ const TESTIMONIALS = [
   { name: 'Lena Schmidt', role: 'E-commerce Director, ModaDE', quote: 'Our customers love the real-time tracking. Returns have dropped 40% since we switched.', stars: 5 },
   { name: 'James Liu', role: 'Supply Chain Lead, TechForward', quote: 'The hazmat certification and compliance features saved us significant regulatory headaches.', stars: 5 },
 ]
+
+function CinematicVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [playing, setPlaying] = useState(false)
+  const [muted, setMuted] = useState(false)
+  const [volume, setVolume] = useState(0.7)
+  const [started, setStarted] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [showControls, setShowControls] = useState(false)
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  function handlePlayClick() {
+    const v = videoRef.current
+    if (!v) return
+    if (!started) {
+      v.volume = volume
+      v.muted = false
+      setStarted(true)
+    }
+    if (v.paused) { v.play(); setPlaying(true) }
+    else { v.pause(); setPlaying(false) }
+  }
+
+  function handleVolumeChange(val: number) {
+    setVolume(val)
+    if (videoRef.current) videoRef.current.volume = val
+    if (val === 0) setMuted(true)
+    else setMuted(false)
+  }
+
+  function toggleMute() {
+    const v = videoRef.current
+    if (!v) return
+    const next = !muted
+    setMuted(next)
+    v.muted = next
+  }
+
+  function handleTimeUpdate() {
+    const v = videoRef.current
+    if (!v || !v.duration) return
+    setProgress((v.currentTime / v.duration) * 100)
+  }
+
+  function seekTo(e: React.MouseEvent<HTMLDivElement>) {
+    const v = videoRef.current
+    if (!v) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ratio = (e.clientX - rect.left) / rect.width
+    v.currentTime = ratio * v.duration
+  }
+
+  function showControlsTemporarily() {
+    setShowControls(true)
+    clearTimeout(hideTimer.current)
+    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+  }
+
+  function handleFullscreen() {
+    videoRef.current?.requestFullscreen?.().catch(() => {})
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 60 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+      className="relative w-full overflow-hidden cursor-pointer group"
+      style={{ borderRadius: '24px', aspectRatio: '21/9', background: '#000' }}
+      onMouseMove={started ? showControlsTemporarily : undefined}
+      onMouseLeave={() => { clearTimeout(hideTimer.current); setShowControls(false) }}
+    >
+      {/* Letterbox bars */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20" style={{ height: '6%', background: '#000' }} />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20" style={{ height: '6%', background: '#000' }} />
+
+      {/* Video element */}
+      <video
+        ref={videoRef}
+        src="/cinematic.mp4"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ zIndex: 1 }}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={() => setPlaying(false)}
+        preload="metadata"
+        playsInline
+      />
+
+      {/* Dark vignette overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          zIndex: 2,
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)',
+        }}
+      />
+
+      {/* Pre-play overlay */}
+      <AnimatePresence>
+        {!started && (
+          <motion.div
+            initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}
+            className="absolute inset-0 flex flex-col items-center justify-center"
+            style={{ zIndex: 10 }}
+            onClick={handlePlayClick}
+          >
+            {/* Cinematic gradient overlay */}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(5,8,16,0.6) 100%)' }} />
+            <div className="relative z-10 flex flex-col items-center gap-6">
+              <p className="text-xs font-mono tracking-widest" style={{ color: 'var(--accent-primary)', letterSpacing: '0.3em' }}>SWIFTHAUL LOGISTICS</p>
+              <motion.button
+                whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.94 }}
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{
+                  background: 'rgba(0,229,255,0.12)',
+                  border: '2px solid rgba(0,229,255,0.5)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                <Play size={28} fill="var(--accent-primary)" style={{ color: 'var(--accent-primary)', marginLeft: '3px' }} />
+              </motion.button>
+              <p className="font-display text-lg md:text-2xl tracking-widest" style={{ color: 'rgba(240,244,255,0.8)' }}>WATCH THE STORY</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* In-play controls (shown on hover after started) */}
+      <AnimatePresence>
+        {started && (showControls || !playing) && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 flex flex-col justify-between p-4 md:p-6"
+            style={{ zIndex: 10 }}
+          >
+            {/* Center play/pause tap zone */}
+            <div className="flex-1 flex items-center justify-center" onClick={handlePlayClick}>
+              <motion.div
+                key={playing ? 'pause' : 'play'}
+                initial={{ scale: 1.4, opacity: 0.8 }} animate={{ scale: 1, opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', pointerEvents: 'none' }}
+              >
+                {playing
+                  ? <Pause size={24} style={{ color: '#fff' }} />
+                  : <Play size={24} fill="#fff" style={{ color: '#fff', marginLeft: '3px' }} />}
+              </motion.div>
+            </div>
+
+            {/* Bottom bar */}
+            <div
+              className="flex flex-col gap-2"
+              style={{ background: 'rgba(5,8,16,0.7)', backdropFilter: 'blur(16px)', borderRadius: '14px', padding: '10px 16px' }}
+            >
+              {/* Progress bar */}
+              <div
+                className="relative h-1 rounded-full cursor-pointer"
+                style={{ background: 'rgba(255,255,255,0.15)' }}
+                onClick={seekTo}
+              >
+                <div
+                  className="absolute left-0 top-0 h-full rounded-full"
+                  style={{ width: `${progress}%`, background: 'var(--accent-primary)', transition: 'width 0.1s linear' }}
+                />
+              </div>
+
+              {/* Controls row */}
+              <div className="flex items-center gap-3">
+                <button onClick={handlePlayClick} className="shrink-0 hover:opacity-80 transition-opacity">
+                  {playing
+                    ? <Pause size={16} style={{ color: '#fff' }} />
+                    : <Play size={16} fill="#fff" style={{ color: '#fff' }} />}
+                </button>
+
+                {/* Volume */}
+                <div className="flex items-center gap-2">
+                  <button onClick={toggleMute} className="hover:opacity-80 transition-opacity">
+                    {muted || volume === 0
+                      ? <VolumeX size={15} style={{ color: '#fff' }} />
+                      : <Volume2 size={15} style={{ color: '#fff' }} />}
+                  </button>
+                  <input
+                    type="range" min="0" max="1" step="0.01"
+                    value={muted ? 0 : volume}
+                    onChange={e => handleVolumeChange(+e.target.value)}
+                    className="w-20 accent-cyan-400 cursor-pointer"
+                    style={{ height: '3px' }}
+                  />
+                </div>
+
+                <div className="flex-1" />
+                <button onClick={handleFullscreen} className="hover:opacity-80 transition-opacity">
+                  <Maximize2 size={14} style={{ color: '#fff' }} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
 
 export default function Home() {
   const navigate = useNavigate()
@@ -168,6 +374,20 @@ export default function Home() {
             <StatCard value={180}     suffix="+"  label="Countries"         delay={0.2} />
             <StatCard value={99}      suffix=".7%" label="On-Time Rate"     delay={0.3} />
           </motion.div>
+        </div>
+      </section>
+
+      {/* ===== CINEMATIC VIDEO ===== */}
+      <section className="relative z-content px-4 pb-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8">
+            <p className="text-xs font-mono tracking-widest" style={{ color: 'var(--accent-primary)', letterSpacing: '0.25em' }}>THE SWIFTHAUL WAY</p>
+          </motion.div>
+          <CinematicVideo />
         </div>
       </section>
 
