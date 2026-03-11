@@ -12,7 +12,15 @@ type Env = {
 const app = new Hono<{ Bindings: Env }>()
 
 app.use('*', cors({
-  origin: ['https://swifthaul.pages.dev', 'http://localhost:5173'],
+  origin: (origin) => {
+    if (!origin) return '*'
+    if (
+      origin.startsWith('http://localhost') ||
+      origin.endsWith('.pages.dev') ||
+      origin === 'https://swifthaul.pages.dev'
+    ) return origin
+    return null
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

@@ -10,7 +10,7 @@ database_id = "cb4013e6-299c-4ef0-8a71-1d85586dadea"
 
 [[kv_namespaces]]
 binding = "CACHE"
-id = "YOUR_KV_NAMESPACE_ID"
+id = "fd85bd84f1844b5485e8a127563ff61c"
 
 [vars]
 ENVIRONMENT = "production"
