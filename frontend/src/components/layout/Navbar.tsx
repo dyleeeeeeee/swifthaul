@@ -15,7 +15,7 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-nav"
     >
       <div
-        className="mx-4 mt-4 glass rounded-2xl px-6 py-4"
+        className="mx-3 mt-3 glass rounded-2xl px-3 py-3 sm:mx-4 sm:mt-4 sm:px-5 sm:py-4 lg:px-6"
         style={{ backdropFilter: 'blur(30px) saturate(200%)' }}
       >
         <div className="flex items-center justify-between">
@@ -24,7 +24,7 @@ export default function Navbar() {
               style={{ background: 'var(--accent-primary)' }}>
               <Zap size={16} fill="currentColor" style={{ color: '#050810' }} />
             </div>
-            <span className="font-display text-xl tracking-wider"
+            <span className="font-display text-lg tracking-wider sm:text-xl"
               style={{ color: 'var(--text-primary)' }}>
               SWIFT<span style={{ color: 'var(--accent-primary)' }}>HAUL</span>
             </span>
@@ -61,7 +61,7 @@ export default function Navbar() {
           </div>
 
           <button
-            className="md:hidden p-2 glass-sm"
+            className="md:hidden shrink-0 p-2 glass-sm"
             onClick={() => setOpen(!open)}
             style={{ borderRadius: '10px' }}
           >
@@ -80,7 +80,7 @@ export default function Navbar() {
             >
               <div className="pt-4 pb-2 flex flex-col gap-3 border-t mt-4"
                 style={{ borderColor: 'var(--glass-border)' }}>
-                {[['Track Shipment', '/track'], ['Admin Portal', '/admin']].map(([label, href]) => (
+                {[['Track Shipment', '/track'], ['Services', '/#services'], ['Admin Portal', '/admin']].map(([label, href]) => (
                   <Link
                     key={label}
                     to={href}

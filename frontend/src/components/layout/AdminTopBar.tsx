@@ -55,7 +55,7 @@ export default function AdminTopBar() {
 
   return (
     <header
-      className="sticky top-0 z-nav flex items-center gap-4 px-6 py-4"
+      className="sticky top-0 z-nav flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5 md:flex-nowrap md:gap-4 md:px-6 md:py-4"
       style={{
         background: 'rgba(5,8,16,0.8)',
         backdropFilter: 'blur(24px) saturate(180%)',
@@ -69,7 +69,7 @@ export default function AdminTopBar() {
           key={title}
           initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
           transition={{ duration: 0.2 }}
-          className="font-display text-2xl tracking-wider mr-auto"
+          className="mr-auto max-w-full font-display text-xl tracking-wider sm:text-2xl"
           style={{ color: 'var(--text-primary)' }}
         >
           {title.toUpperCase()}
@@ -77,13 +77,13 @@ export default function AdminTopBar() {
       </AnimatePresence>
 
       {/* Global Search */}
-      <form onSubmit={handleSearch} className="relative hidden md:block">
+      <form onSubmit={handleSearch} className="relative order-3 w-full md:order-none md:block md:w-auto">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search parcels…"
-          className="glass-input pl-9 pr-8 py-2 text-sm w-60"
+          className="glass-input w-full pl-9 pr-8 py-2 text-sm md:w-60"
           style={{ borderRadius: '10px' }}
         />
         {search && (
@@ -120,7 +120,7 @@ export default function AdminTopBar() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="absolute right-0 top-full mt-2 glass shadow-2xl overflow-hidden"
+              className="absolute right-0 top-full mt-2 glass shadow-2xl overflow-hidden max-w-[calc(100vw-2rem)]"
               style={{ width: '300px', borderRadius: '16px', transformOrigin: 'top right' }}
             >
               <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--glass-border)' }}>
@@ -154,7 +154,7 @@ export default function AdminTopBar() {
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
           onClick={() => setShowUser(v => !v)}
-          className="flex items-center gap-2 px-3 py-2 glass-sm transition-colors hover:bg-white/5"
+          className="flex items-center gap-2 px-2.5 py-2 glass-sm transition-colors hover:bg-white/5 sm:px-3"
           style={{ borderRadius: '10px', color: 'var(--text-secondary)' }}
         >
           <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
@@ -174,7 +174,7 @@ export default function AdminTopBar() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -8 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="absolute right-0 top-full mt-2 glass shadow-2xl overflow-hidden"
+              className="absolute right-0 top-full mt-2 glass shadow-2xl overflow-hidden max-w-[calc(100vw-2rem)]"
               style={{ width: '180px', borderRadius: '14px', transformOrigin: 'top right' }}
             >
               <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--glass-border)' }}>
