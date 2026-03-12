@@ -91,9 +91,9 @@ export default function AdminLogin() {
           </motion.button>
         </form>
 
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
+        {/* <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
           Demo: admin@swifthaul.dev / admin123
-        </p>
+        </p> */}
       </motion.div>
     </div>
   )
