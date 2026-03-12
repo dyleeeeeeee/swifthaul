@@ -137,7 +137,7 @@ export default function CreateShipment() {
         <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Step {step + 1} of {STEP_LABELS.length} — {STEP_LABELS[step]}</p>
       </div>
 
-      <div className="glass p-8" style={{ borderRadius: '24px' }}>
+      <div className="glass p-5 sm:p-8" style={{ borderRadius: '24px' }}>
         <StepIndicator current={step} total={STEP_LABELS.length} />
 
         <AnimatePresence mode="wait" custom={dir}>
@@ -154,12 +154,12 @@ export default function CreateShipment() {
             {step === 0 && (
               <div className="space-y-4">
                 <h3 className="font-display text-xl mb-4" style={{ color: 'var(--text-primary)' }}>SENDER INFORMATION</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <GlassInput label="Full Name" value={form.sender_name} onChange={e => set('sender_name', e.target.value)} required />
                   <GlassInput label="Company" value={form.sender_company ?? ''} onChange={e => set('sender_company', e.target.value)} />
                 </div>
                 <GlassInput label="Address" value={form.sender_address} onChange={e => set('sender_address', e.target.value)} required />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm mb-1.5 font-body" style={{ color: 'var(--text-secondary)' }}>Country</label>
                     <select value={form.sender_country} onChange={e => set('sender_country', e.target.value)}
@@ -176,12 +176,12 @@ export default function CreateShipment() {
             {step === 1 && (
               <div className="space-y-4">
                 <h3 className="font-display text-xl mb-4" style={{ color: 'var(--text-primary)' }}>RECEIVER INFORMATION</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <GlassInput label="Full Name" value={form.receiver_name} onChange={e => set('receiver_name', e.target.value)} required />
                   <GlassInput label="Company" value={form.receiver_company ?? ''} onChange={e => set('receiver_company', e.target.value)} />
                 </div>
                 <GlassInput label="Address" value={form.receiver_address} onChange={e => set('receiver_address', e.target.value)} required />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm mb-1.5 font-body" style={{ color: 'var(--text-secondary)' }}>Country</label>
                     <select value={form.receiver_country} onChange={e => set('receiver_country', e.target.value)}
@@ -198,7 +198,7 @@ export default function CreateShipment() {
             {step === 2 && (
               <div className="space-y-5">
                 <h3 className="font-display text-xl mb-4" style={{ color: 'var(--text-primary)' }}>PACKAGE DETAILS</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm mb-1.5 font-body" style={{ color: 'var(--text-secondary)' }}>
                       Weight ({weightUnit})
@@ -223,7 +223,7 @@ export default function CreateShipment() {
                   onChange={e => set('declared_value', +e.target.value)} />
                 <div>
                   <label className="block text-sm mb-3 font-body" style={{ color: 'var(--text-secondary)' }}>Service Type</label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {SERVICE_TYPES.map(s => (
                       <button key={s.value} onClick={() => set('service_type', s.value)}
                         className="glass p-4 text-left transition-all"

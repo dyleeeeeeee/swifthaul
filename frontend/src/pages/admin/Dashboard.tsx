@@ -204,17 +204,20 @@ export default function Dashboard() {
             <motion.div
               key={act.id}
               whileHover={{ background: 'rgba(255,255,255,0.03)' }}
-              className="flex items-center gap-4 px-3 py-3 rounded-xl"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl"
               style={{ cursor: 'default' }}
             >
-              <span className="font-mono text-xs shrink-0" style={{ color: 'var(--accent-primary)' }}>
+              <span className="font-mono text-xs shrink-0 hidden sm:inline" style={{ color: 'var(--accent-primary)' }}>
                 {act.parcel_id}
               </span>
-              <span className="text-xs flex-1" style={{ color: 'var(--text-secondary)' }}>
+              <span className="font-mono text-xs shrink-0 sm:hidden" style={{ color: 'var(--accent-primary)' }}>
+                {act.parcel_id.slice(-8)}
+              </span>
+              <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-secondary)' }}>
                 {act.event_type.replace(/_/g, ' ')} — {act.location}
               </span>
               <StatusBadge status={act.current_status} size="sm" />
-              <span className="text-xs font-mono shrink-0" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-xs font-mono shrink-0 hidden md:inline" style={{ color: 'var(--text-muted)' }}>
                 {formatDate(act.timestamp)}
               </span>
             </motion.div>

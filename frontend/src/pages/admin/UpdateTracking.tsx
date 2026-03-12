@@ -87,7 +87,7 @@ export default function UpdateTracking() {
           {/* Event Type Selector */}
           <div>
             <label className="block text-sm mb-3 font-body" style={{ color: 'var(--text-secondary)' }}>Event Type</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {EVENT_TYPES.map(type => (
                 <button
                   key={type}

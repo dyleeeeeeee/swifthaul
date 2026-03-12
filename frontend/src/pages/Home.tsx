@@ -232,7 +232,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16">
             <p className="text-xs font-mono mb-3" style={{ color: 'var(--accent-primary)', letterSpacing: '0.2em' }}>HOW IT WORKS</p>
-            <h2 className="font-display text-5xl" style={{ color: 'var(--text-primary)' }}>SIMPLE AS 1-2-3-4</h2>
+            <h2 className="font-display text-3xl sm:text-5xl" style={{ color: 'var(--text-primary)' }}>SIMPLE AS 1-2-3-4</h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -269,7 +269,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16">
             <p className="text-xs font-mono mb-3" style={{ color: 'var(--accent-primary)', letterSpacing: '0.2em' }}>OUR SERVICES</p>
-            <h2 className="font-display text-5xl" style={{ color: 'var(--text-primary)' }}>BUILT FOR EVERY NEED</h2>
+            <h2 className="font-display text-3xl sm:text-5xl" style={{ color: 'var(--text-primary)' }}>BUILT FOR EVERY NEED</h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -306,7 +306,7 @@ export default function Home() {
       <section className="relative z-content py-24 overflow-hidden">
         <div className="mb-12 text-center px-4">
           <p className="text-xs font-mono mb-3" style={{ color: 'var(--accent-primary)', letterSpacing: '0.2em' }}>TESTIMONIALS</p>
-          <h2 className="font-display text-5xl" style={{ color: 'var(--text-primary)' }}>TRUSTED WORLDWIDE</h2>
+          <h2 className="font-display text-3xl sm:text-5xl" style={{ color: 'var(--text-primary)' }}>TRUSTED WORLDWIDE</h2>
         </div>
         <div className="relative overflow-hidden">
           <div className="marquee-track">
@@ -345,10 +345,10 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
-          className="max-w-4xl mx-auto glass text-center p-16"
+          className="max-w-4xl mx-auto glass text-center p-8 sm:p-16"
           style={{ borderRadius: '28px' }}>
           <Globe size={48} className="mx-auto mb-6" style={{ color: 'var(--accent-primary)' }} />
-          <h2 className="font-display text-5xl mb-4" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="font-display text-3xl sm:text-5xl mb-4" style={{ color: 'var(--text-primary)' }}>
             READY TO SHIP?
           </h2>
           <p className="font-body mb-8 max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>

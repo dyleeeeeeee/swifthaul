@@ -274,14 +274,14 @@ export default function Track() {
               className="space-y-6"
             >
               {/* Main Card */}
-              <div className="glass p-6 md:p-8">
-                <div className="grid md:grid-cols-2 gap-8">
+              <div className="glass p-4 sm:p-6 md:p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   {/* Left Zone */}
                   <div className="space-y-5">
                     <div>
                       <p className="text-xs font-mono mb-1" style={{ color: 'var(--text-muted)' }}>TRACKING ID</p>
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-xl" style={{ color: 'var(--accent-primary)' }}>
+                        <span className="font-mono text-base sm:text-xl break-all" style={{ color: 'var(--accent-primary)' }}>
                           {parcel.id}
                         </span>
                         <motion.button

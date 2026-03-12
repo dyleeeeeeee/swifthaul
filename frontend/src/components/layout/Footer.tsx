@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer className="relative z-content mt-32">
-      <div className="glass mx-4 mb-4 rounded-2xl p-10"
+      <div className="glass mx-4 mb-4 rounded-2xl p-6 sm:p-10"
         style={{ borderRadius: '24px' }}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
