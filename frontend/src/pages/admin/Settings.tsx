@@ -85,12 +85,12 @@ export default function Settings() {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-2 glass p-1.5" style={{ borderRadius: '14px', width: 'fit-content' }}>
+      <div className="flex flex-wrap gap-2 glass p-1.5" style={{ borderRadius: '14px' }}>
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-body transition-all"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-body transition-all sm:px-4"
             style={{
               borderRadius: '10px',
               background: tab === id ? 'rgba(0,229,255,0.1)' : 'transparent',
@@ -107,7 +107,7 @@ export default function Settings() {
       {/* Tab Content */}
       {tab === 'profile' && (
         <SectionCard title="Profile Information">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <GlassInput label="Full Name" value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} />
             <GlassInput label="Email Address" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} type="email" />
             <GlassInput label="Company" value={profile.company} onChange={e => setProfile(p => ({ ...p, company: e.target.value }))} />
