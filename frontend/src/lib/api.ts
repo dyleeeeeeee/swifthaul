@@ -38,6 +38,11 @@ export const api = {
       body: JSON.stringify(data),
     }),
   getAnalytics: () => request<Analytics>('/analytics'),
+  getAdmins: () => request<{ admins: AdminUser[] }>('/admins'),
+  createAdmin: (data: { email: string; name: string; password: string }) =>
+    request<AdminUser>('/admins', { method: 'POST', body: JSON.stringify(data) }),
+  deleteAdmin: (id: string) =>
+    request<{ success: boolean }>(`/admins/${id}`, { method: 'DELETE' }),
 }
 
 export interface Parcel {
@@ -91,6 +96,13 @@ export interface CreateParcelInput {
   service_type: string
   declared_value: number
   eta?: string
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  name: string
+  created_at: string
 }
 
 export interface TrackingEventInput {

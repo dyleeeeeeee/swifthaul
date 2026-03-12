@@ -311,11 +311,58 @@ analyticsRouter.get('/', async (c) => {
 })
 
 /* =========================================================
+   ADMINS (ADMIN — PROTECTED)
+   ========================================================= */
+const adminsRouter = new Hono<{ Bindings: Env }>()
+adminsRouter.use('*', authMiddleware())
+
+adminsRouter.get('/', async (c) => {
+  const admins = await c.env.DB.prepare(
+    'SELECT id, email, name, created_at FROM admins ORDER BY created_at ASC'
+  ).all()
+  return c.json({ admins: admins.results })
+})
+
+adminsRouter.post('/', async (c) => {
+  const { email, name, password } = await c.req.json()
+  if (!email || !name || !password) {
+    return c.json({ error: 'email, name, and password are required' }, 400)
+  }
+  if (password.length < 8) {
+    return c.json({ error: 'Password must be at least 8 characters' }, 400)
+  }
+  const existing = await c.env.DB.prepare('SELECT id FROM admins WHERE email = ?').bind(email).first()
+  if (existing) return c.json({ error: 'An admin with that email already exists' }, 409)
+
+  const hash = await bcrypt.hash(password, 10)
+  const id = crypto.randomUUID()
+  const now = new Date().toISOString()
+
+  await c.env.DB.prepare(
+    'INSERT INTO admins (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)'
+  ).bind(id, email, name, hash, now).run()
+
+  return c.json({ id, email, name, created_at: now }, 201)
+})
+
+adminsRouter.delete('/:id', async (c) => {
+  const id = c.req.param('id')
+  // Prevent deleting the last admin
+  const count = await c.env.DB.prepare('SELECT COUNT(*) as n FROM admins').first<{ n: number }>()
+  if ((count?.n ?? 0) <= 1) {
+    return c.json({ error: 'Cannot delete the last admin account' }, 400)
+  }
+  await c.env.DB.prepare('DELETE FROM admins WHERE id = ?').bind(id).run()
+  return c.json({ success: true })
+})
+
+/* =========================================================
    MOUNT ROUTERS
    ========================================================= */
 app.route('/api/parcels', parcelsRouter)
 app.route('/api/events', eventsRouter)
 app.route('/api/analytics', analyticsRouter)
+app.route('/api/admins', adminsRouter)
 
 app.get('/api/health', (c) => c.json({ ok: true, ts: new Date().toISOString() }))
 

@@ -1,16 +1,19 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Save, Eye, EyeOff, Shield, Bell, Globe, Palette, Loader2, CheckCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Save, Eye, EyeOff, Shield, Bell, Globe, Palette, Loader2, CheckCircle, Users, Trash2, UserPlus, Mail, User } from 'lucide-react'
 import GlassInput from '../../components/ui/GlassInput'
+import { api, AdminUser } from '../../lib/api'
 import toast from 'react-hot-toast'
 
-type Tab = 'profile' | 'security' | 'notifications' | 'api'
+type Tab = 'profile' | 'security' | 'notifications' | 'api' | 'admins'
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'profile',       label: 'Profile',       icon: Globe },
   { id: 'security',      label: 'Security',      icon: Shield },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'api',           label: 'API & Config',  icon: Palette },
+  { id: 'admins',        label: 'Admins',        icon: Users },
 ]
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -202,21 +205,240 @@ export default function Settings() {
         </SectionCard>
       )}
 
-      {/* Save Button */}
-      <motion.button
-        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
-        onClick={handleSave}
-        disabled={saving}
-        className="btn-primary flex items-center gap-2 text-sm disabled:opacity-60"
+      {tab === 'admins' && <AdminsTab />}
+
+      {/* Save Button — only show on non-admins tabs */}
+      {tab !== 'admins' && (
+        <motion.button
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-primary flex items-center gap-2 text-sm disabled:opacity-60"
+        >
+          {saving ? (
+            <><Loader2 size={14} className="animate-spin" /> Saving…</>
+          ) : saved ? (
+            <><CheckCircle size={14} /> Saved!</>
+          ) : (
+            <><Save size={14} /> Save Changes</>
+          )}
+        </motion.button>
+      )}
+    </div>
+  )
+}
+
+/* =========================================================
+   ADMINS TAB
+   ========================================================= */
+function AdminsTab() {
+  const qc = useQueryClient()
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [showPw, setShowPw] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admins'],
+    queryFn: api.getAdmins,
+  })
+  const admins = data?.admins ?? []
+
+  const createMut = useMutation({
+    mutationFn: () => api.createAdmin(form),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admins'] })
+      toast.success(`Admin ${form.email} created`)
+      setForm({ name: '', email: '', password: '' })
+      setShowForm(false)
+    },
+    onError: (e: Error) => toast.error(e.message),
+  })
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => api.deleteAdmin(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admins'] })
+      toast.success('Admin removed')
+      setDeleteTarget(null)
+    },
+    onError: (e: Error) => toast.error(e.message),
+  })
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="glass p-6"
+        style={{ borderRadius: '20px' }}
       >
-        {saving ? (
-          <><Loader2 size={14} className="animate-spin" /> Saving…</>
-        ) : saved ? (
-          <><CheckCircle size={14} /> Saved!</>
+        <div className="flex items-center justify-between pb-3 border-b mb-5"
+          style={{ borderColor: 'var(--glass-border)' }}>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Admin Accounts
+          </h3>
+          <motion.button
+            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+            onClick={() => setShowForm(v => !v)}
+            className="flex items-center gap-2 text-xs font-semibold px-3 py-2"
+            style={{
+              borderRadius: '8px',
+              background: showForm ? 'rgba(255,255,255,0.06)' : 'var(--accent-primary)',
+              color: showForm ? 'var(--text-secondary)' : '#050810',
+              border: showForm ? '1px solid var(--glass-border)' : 'none',
+            }}
+          >
+            <UserPlus size={13} />
+            {showForm ? 'Cancel' : 'Add Admin'}
+          </motion.button>
+        </div>
+
+        {/* Create form */}
+        <AnimatePresence>
+          {showForm && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div className="glass-sm p-5 mb-5 space-y-4" style={{ borderRadius: '14px', borderColor: 'rgba(0,229,255,0.2)' }}>
+                <p className="text-xs font-mono" style={{ color: 'var(--accent-primary)' }}>NEW ADMIN</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <GlassInput
+                    label="Full Name"
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    icon={<User size={13} />}
+                  />
+                  <GlassInput
+                    label="Email Address"
+                    type="email"
+                    value={form.email}
+                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                    icon={<Mail size={13} />}
+                  />
+                </div>
+                <div className="relative">
+                  <GlassInput
+                    label="Password (min 8 chars)"
+                    type={showPw ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                    icon={<Shield size={13} />}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(v => !v)}
+                    className="absolute right-3 bottom-3"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
+                  onClick={() => createMut.mutate()}
+                  disabled={createMut.isPending || !form.name || !form.email || form.password.length < 8}
+                  className="btn-primary flex items-center gap-2 text-sm disabled:opacity-40"
+                >
+                  {createMut.isPending
+                    ? <><Loader2 size={13} className="animate-spin" /> Creating…</>
+                    : <><UserPlus size={13} /> Create Admin</>
+                  }
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Admin list */}
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <div key={i} className="shimmer h-14 rounded-xl" />
+            ))}
+          </div>
+        ) : admins.length === 0 ? (
+          <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>No admins found.</p>
         ) : (
-          <><Save size={14} /> Save Changes</>
+          <div className="space-y-2">
+            {admins.map((admin, i) => (
+              <motion.div
+                key={admin.id}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/[0.03]"
+              >
+                <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-display text-sm"
+                  style={{ background: `hsl(${(i * 73) % 360}, 60%, 30%)`, color: '#fff' }}>
+                  {admin.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{admin.name}</p>
+                  <p className="text-xs truncate font-mono" style={{ color: 'var(--text-muted)' }}>{admin.email}</p>
+                </div>
+                <span className="text-xs font-mono hidden sm:block shrink-0" style={{ color: 'var(--text-muted)' }}>
+                  {new Date(admin.created_at).toLocaleDateString()}
+                </span>
+                <motion.button
+                  whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                  onClick={() => setDeleteTarget(admin)}
+                  className="w-7 h-7 glass-sm flex items-center justify-center shrink-0 transition-colors hover:border-red-500/40"
+                  style={{ borderRadius: '8px', color: '#ff5252' }}
+                  title="Remove admin"
+                >
+                  <Trash2 size={12} />
+                </motion.button>
+              </motion.div>
+            ))}
+          </div>
         )}
-      </motion.button>
+      </motion.div>
+
+      {/* Delete confirm modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center z-modal px-4"
+            style={{ background: 'rgba(5,8,16,0.75)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setDeleteTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="glass p-8 max-w-sm w-full"
+              style={{ borderRadius: '24px', borderColor: 'rgba(255,23,68,0.3)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <Trash2 size={28} className="mb-4" style={{ color: '#ff1744' }} />
+              <h3 className="font-display text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>REMOVE ADMIN</h3>
+              <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Remove <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{deleteTarget.name}</span>?
+              </p>
+              <p className="text-xs mb-6 font-mono" style={{ color: 'var(--text-muted)' }}>{deleteTarget.email}</p>
+              <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)' }}>
+                They will no longer be able to log in to the admin portal.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1 text-sm">Cancel</button>
+                <button
+                  onClick={() => deleteMut.mutate(deleteTarget.id)}
+                  disabled={deleteMut.isPending}
+                  className="flex-1 text-sm py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                  style={{ background: '#ff1744', color: '#fff', border: 'none', cursor: 'pointer' }}
+                >
+                  {deleteMut.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
+                  Remove
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
