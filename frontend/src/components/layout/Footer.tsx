@@ -21,7 +21,7 @@ export default function Footer() {
                 <Zap size={16} fill="currentColor" style={{ color: '#050810' }} />
               </div>
               <span className="font-display text-xl tracking-wider">
-                SWIFT<span style={{ color: 'var(--accent-primary)' }}>HAUL</span>
+                TRANSIT<span style={{ color: 'var(--accent-primary)' }}>HAUL</span>
               </span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -61,7 +61,7 @@ export default function Footer() {
               style={{ color: 'var(--accent-primary)' }}>Contact</h4>
             <ul className="space-y-3">
               {[
-                [Mail, 'support@swifthaul.dev'],
+                [Mail, 'support@transithaul.dev'],
                 [Phone, '+1 (800) SWIFT-01'],
                 [MapPin, '1 Logistics Way, Global HQ'],
               ].map(([Icon, text]) => (
@@ -78,7 +78,7 @@ export default function Footer() {
         <div className="mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderTop: '1px solid var(--glass-border)' }}>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            © {new Date().getFullYear()} SwiftHaul. All rights reserved.
+            © {new Date().getFullYear()} TransitHaul. All rights reserved.
           </p>
           <div className="flex items-center gap-3">
             {socials.map(({ icon: Icon, href, label }) => (

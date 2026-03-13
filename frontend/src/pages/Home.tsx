@@ -57,10 +57,10 @@ const SERVICES = [
 ]
 
 const TESTIMONIALS = [
-  { name: 'Sarah Chen', role: 'VP Operations, NovaTech', quote: 'SwiftHaul cut our international shipping delays by 60%. The tracking dashboard is a game-changer.', stars: 5 },
+  { name: 'Sarah Chen', role: 'VP Operations, NovaTech', quote: 'TransitHaul cut our international shipping delays by 60%. The tracking dashboard is a game-changer.', stars: 5 },
   { name: 'Marcus Webb', role: 'Founder, WebMerchandise', quote: 'Every parcel, every time. The reliability is unmatched and the interface is just beautiful.', stars: 5 },
   { name: 'Priya Kapoor', role: 'Logistics Manager, MedSupply', quote: 'Cold chain handling is flawless. Our pharmaceutical shipments arrive perfectly conditioned.', stars: 5 },
-  { name: 'Tom Okafor', role: 'CEO, AfroExport Ltd', quote: 'We moved our entire B2B logistics to SwiftHaul. The analytics alone justify the switch.', stars: 5 },
+  { name: 'Tom Okafor', role: 'CEO, AfroExport Ltd', quote: 'We moved our entire B2B logistics to TransitHaul. The analytics alone justify the switch.', stars: 5 },
   { name: 'Lena Schmidt', role: 'E-commerce Director, ModaDE', quote: 'Our customers love the real-time tracking. Returns have dropped 40% since we switched.', stars: 5 },
   { name: 'James Liu', role: 'Supply Chain Lead, TechForward', quote: 'The hazmat certification and compliance features saved us significant regulatory headaches.', stars: 5 },
 ]
@@ -164,7 +164,7 @@ export default function Home() {
             custom={2} variants={FADE_UP} initial="hidden" animate="visible"
             className="font-body max-w-xl mx-auto leading-relaxed"
             style={{ fontSize: '18px', fontWeight: 300, color: 'var(--text-secondary)' }}>
-            SwiftHaul delivers precision logistics across 180+ countries. Real-time tracking, zero surprises.
+            TransitHaul delivers precision logistics across 180+ countries. Real-time tracking, zero surprises.
           </motion.p>
 
           {/* CTA Row */}
@@ -352,7 +352,7 @@ export default function Home() {
             READY TO SHIP?
           </h2>
           <p className="font-body mb-8 max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            Join 50,000+ businesses that trust SwiftHaul with their logistics. Start tracking today.
+            Join 50,000+ businesses that trust TransitHaul with their logistics. Start tracking today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button

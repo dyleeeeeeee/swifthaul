@@ -26,7 +26,7 @@ export default function Navbar() {
             </div>
             <span className="font-display text-lg tracking-wider sm:text-xl"
               style={{ color: 'var(--text-primary)' }}>
-              SWIFT<span style={{ color: 'var(--accent-primary)' }}>HAUL</span>
+              TRANSIT<span style={{ color: 'var(--accent-primary)' }}>HAUL</span>
             </span>
           </Link>
 
