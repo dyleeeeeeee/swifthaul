@@ -17,7 +17,9 @@ app.use('*', cors({
     if (
       origin.startsWith('http://localhost') ||
       origin.endsWith('.pages.dev') ||
-      origin === 'https://swifthaul.pages.dev'
+      origin === 'https://swifthaul.pages.dev' ||
+      origin === 'https://transithaul.com' ||
+      origin === 'https://www.transithaul.com'
     ) return origin
     return null
   },
