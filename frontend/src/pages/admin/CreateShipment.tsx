@@ -68,7 +68,7 @@ export default function CreateShipment() {
       qc.invalidateQueries({ queryKey: ['parcels'] })
       setCreated(data.id)
     },
-    onError: () => toast.error('Failed to create shipment'),
+    onError: (err: any) => toast.error(err?.message || 'Failed to create shipment'),
   })
 
   function set(key: keyof FormData, val: string | number) {

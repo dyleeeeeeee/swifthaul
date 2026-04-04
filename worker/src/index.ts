@@ -139,29 +139,34 @@ parcelsRouter.get('/', async (c) => {
 })
 
 parcelsRouter.post('/', async (c) => {
-  const body = await c.req.json()
-  const id = generateId()
-  const now = new Date().toISOString()
+  try {
+    const body = await c.req.json()
+    const id = generateId()
+    const now = new Date().toISOString()
 
-  await c.env.DB.prepare(`
-    INSERT INTO parcels (id, sender_name, sender_address, sender_country, receiver_name, receiver_address, receiver_country,
-      weight_kg, dimensions, service_type, declared_value, current_status, eta, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?)
-  `).bind(
-    id,
-    body.sender_name, body.sender_address, body.sender_country,
-    body.receiver_name, body.receiver_address, body.receiver_country,
-    body.weight_kg, body.dimensions ?? '', body.service_type, body.declared_value ?? 0,
-    body.eta ?? new Date(Date.now() + 5 * 86400000).toISOString(),
-    now, now
-  ).run()
+    await c.env.DB.prepare(`
+      INSERT INTO parcels (id, sender_name, sender_address, sender_country, receiver_name, receiver_address, receiver_country,
+        weight_kg, dimensions, service_type, declared_value, current_status, eta, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?)
+    `).bind(
+      id,
+      body.sender_name, body.sender_address, body.sender_country,
+      body.receiver_name, body.receiver_address, body.receiver_country,
+      body.weight_kg, body.dimensions ?? '', body.service_type, body.declared_value ?? 0,
+      body.eta ?? new Date(Date.now() + 5 * 86400000).toISOString(),
+      now, now
+    ).run()
 
-  await c.env.DB.prepare(`
-    INSERT INTO tracking_events (id, parcel_id, event_type, location, description, timestamp)
-    VALUES (?, ?, 'CREATED', ?, 'Shipment created and registered', ?)
-  `).bind(crypto.randomUUID(), id, body.sender_country, now).run()
+    await c.env.DB.prepare(`
+      INSERT INTO tracking_events (id, parcel_id, event_type, location, description, timestamp)
+      VALUES (?, ?, 'CREATED', ?, 'Shipment created and registered', ?)
+    `).bind(crypto.randomUUID(), id, body.sender_country, now).run()
 
-  return c.json({ id, status: 'CREATED' }, 201)
+    return c.json({ id, status: 'CREATED' }, 201)
+  } catch (err: any) {
+    console.error('createParcel error:', err)
+    return c.json({ message: err?.message ?? 'Failed to create parcel' }, 500)
+  }
 })
 
 parcelsRouter.put('/:id', async (c) => {
