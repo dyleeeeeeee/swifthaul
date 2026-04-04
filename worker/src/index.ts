@@ -141,8 +141,24 @@ parcelsRouter.get('/', async (c) => {
 parcelsRouter.post('/', async (c) => {
   try {
     const body = await c.req.json()
+
     const id = generateId()
     const now = new Date().toISOString()
+
+    // Normalise all fields — nothing should be null/undefined going into D1
+    const senderName      = String(body.sender_name    ?? '').trim() || 'Unknown Sender'
+    const senderAddress   = String(body.sender_address ?? '').trim()
+    const senderCountry   = String(body.sender_country ?? '').trim() || 'Unknown'
+    const receiverName    = String(body.receiver_name    ?? '').trim() || 'Unknown Receiver'
+    const receiverAddress = String(body.receiver_address ?? '').trim()
+    const receiverCountry = String(body.receiver_country ?? '').trim() || 'Unknown'
+    const weightKg        = Number(body.weight_kg    ?? 0) || 0
+    const dimensions      = String(body.dimensions   ?? '').trim()
+    const serviceType     = String(body.service_type ?? 'STANDARD').trim() || 'STANDARD'
+    const declaredValue   = Number(body.declared_value ?? 0) || 0
+    const eta             = body.eta
+      ? String(body.eta)
+      : new Date(Date.now() + 5 * 86400000).toISOString()
 
     await c.env.DB.prepare(`
       INSERT INTO parcels (id, sender_name, sender_address, sender_country, receiver_name, receiver_address, receiver_country,
@@ -150,17 +166,16 @@ parcelsRouter.post('/', async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?)
     `).bind(
       id,
-      body.sender_name, body.sender_address, body.sender_country,
-      body.receiver_name, body.receiver_address, body.receiver_country,
-      body.weight_kg, body.dimensions ?? '', body.service_type, body.declared_value ?? 0,
-      body.eta ?? new Date(Date.now() + 5 * 86400000).toISOString(),
-      now, now
+      senderName, senderAddress, senderCountry,
+      receiverName, receiverAddress, receiverCountry,
+      weightKg, dimensions, serviceType, declaredValue,
+      eta, now, now
     ).run()
 
     await c.env.DB.prepare(`
       INSERT INTO tracking_events (id, parcel_id, event_type, location, description, timestamp)
       VALUES (?, ?, 'CREATED', ?, 'Shipment created and registered', ?)
-    `).bind(crypto.randomUUID(), id, body.sender_country, now).run()
+    `).bind(crypto.randomUUID(), id, senderCountry, now).run()
 
     return c.json({ id, status: 'CREATED' }, 201)
   } catch (err: any) {
