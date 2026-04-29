@@ -7,5 +7,6 @@ ALTER TABLE admins ADD COLUMN role TEXT NOT NULL DEFAULT 'admin';
 -- Add created_by column to parcels (nullable for pre-existing records)
 ALTER TABLE parcels ADD COLUMN created_by TEXT REFERENCES admins(id);
 
--- Elevate the original seed admin to super_admin
-UPDATE admins SET role = 'super_admin' WHERE id = 'admin-001';
+-- After running this, create your super_admin via:
+-- POST /api/auth/setup  { "email": "...", "name": "...", "password": "..." }
+-- (endpoint auto-disables once a super_admin exists)

@@ -95,6 +95,38 @@ app.get('/api/track/:id', async (c) => {
 })
 
 /* =========================================================
+   ONE-TIME SETUP (creates first super_admin, self-disables after)
+   ========================================================= */
+app.post('/api/auth/setup', async (c) => {
+  // Only works when no super_admin exists — permanently locks itself out after first use
+  const existing = await c.env.DB.prepare(
+    "SELECT id FROM admins WHERE role = 'super_admin' LIMIT 1"
+  ).first()
+  if (existing) return c.json({ error: 'Setup already completed' }, 403)
+
+  const { email, name, password } = await c.req.json()
+  if (!email || !name || !password) {
+    return c.json({ error: 'email, name, and password are required' }, 400)
+  }
+  if (password.length < 8) {
+    return c.json({ error: 'Password must be at least 8 characters' }, 400)
+  }
+
+  const emailTaken = await c.env.DB.prepare('SELECT id FROM admins WHERE email = ?').bind(email).first()
+  if (emailTaken) return c.json({ error: 'Email already in use' }, 409)
+
+  const hash = await bcrypt.hash(password, 10)
+  const id = crypto.randomUUID()
+  const now = new Date().toISOString()
+
+  await c.env.DB.prepare(
+    'INSERT INTO admins (id, email, name, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(id, email, name, hash, 'super_admin', now).run()
+
+  return c.json({ message: 'Super admin created. This endpoint is now disabled.', id, email, name }, 201)
+})
+
+/* =========================================================
    AUTH
    ========================================================= */
 app.post('/api/auth/login', async (c) => {
