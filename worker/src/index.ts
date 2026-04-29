@@ -9,6 +9,13 @@ type Env = {
   JWT_SECRET: string
 }
 
+type JWTPayload = {
+  sub: string
+  email: string
+  role: 'super_admin' | 'admin'
+  exp: number
+}
+
 const app = new Hono<{ Bindings: Env }>()
 
 app.use('*', cors({
@@ -44,13 +51,21 @@ function authMiddleware() {
     }
     const token = header.slice(7)
     try {
-      const payload = await verify(token, c.env.JWT_SECRET, 'HS256')
+      const payload = await verify(token, c.env.JWT_SECRET, 'HS256') as JWTPayload
       c.set('jwtPayload', payload)
       await next()
     } catch {
       return c.json({ error: 'Invalid token' }, 401)
     }
   }
+}
+
+function isSuperAdmin(c: any): boolean {
+  return (c.get('jwtPayload') as JWTPayload)?.role === 'super_admin'
+}
+
+function getAdminId(c: any): string {
+  return (c.get('jwtPayload') as JWTPayload)?.sub
 }
 
 /* =========================================================
@@ -94,12 +109,20 @@ app.post('/api/auth/login', async (c) => {
   const valid = await bcrypt.compare(password, admin.password_hash)
   if (!valid) return c.json({ error: 'Invalid credentials' }, 401)
 
+  const role: 'super_admin' | 'admin' = admin.role ?? 'admin'
+
   const token = await sign(
-    { sub: admin.id, email: admin.email, role: 'admin', exp: Math.floor(Date.now() / 1000) + 86400 },
+    {
+      sub: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role,
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    },
     c.env.JWT_SECRET
   )
 
-  return c.json({ token, admin: { id: admin.id, email: admin.email, name: admin.name } })
+  return c.json({ token, admin: { id: admin.id, email: admin.email, name: admin.name, role } })
 })
 
 /* =========================================================
@@ -111,10 +134,20 @@ parcelsRouter.use('*', authMiddleware())
 parcelsRouter.get('/', async (c) => {
   const { search = '', status = '', page = '1', pageSize = '10' } = c.req.query()
   const offset = (Number(page) - 1) * Number(pageSize)
+  const superAdmin = isSuperAdmin(c)
+  const adminId = getAdminId(c)
 
   let query = 'SELECT * FROM parcels WHERE 1=1'
   let countQuery = 'SELECT COUNT(*) as total FROM parcels WHERE 1=1'
-  const bindings: string[] = []
+  const bindings: (string | number)[] = []
+
+  // Scope to own parcels for regular admins
+  if (!superAdmin) {
+    query += ' AND (created_by = ? OR created_by IS NULL)'
+    countQuery += ' AND (created_by = ? OR created_by IS NULL)'
+    // Note: IS NULL covers pre-migration parcels — remove once all rows have created_by
+    bindings.push(adminId)
+  }
 
   if (search) {
     query += ' AND (id LIKE ? OR sender_name LIKE ? OR receiver_name LIKE ?)'
@@ -141,11 +174,10 @@ parcelsRouter.get('/', async (c) => {
 parcelsRouter.post('/', async (c) => {
   try {
     const body = await c.req.json()
-
+    const adminId = getAdminId(c)
     const id = generateId()
     const now = new Date().toISOString()
 
-    // Normalise all fields — nothing should be null/undefined going into D1
     const senderName      = String(body.sender_name    ?? '').trim() || 'Unknown Sender'
     const senderAddress   = String(body.sender_address ?? '').trim()
     const senderCountry   = String(body.sender_country ?? '').trim() || 'Unknown'
@@ -162,14 +194,14 @@ parcelsRouter.post('/', async (c) => {
 
     await c.env.DB.prepare(`
       INSERT INTO parcels (id, sender_name, sender_address, sender_country, receiver_name, receiver_address, receiver_country,
-        weight_kg, dimensions, service_type, declared_value, current_status, eta, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?)
+        weight_kg, dimensions, service_type, declared_value, current_status, eta, created_at, updated_at, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?, ?)
     `).bind(
       id,
       senderName, senderAddress, senderCountry,
       receiverName, receiverAddress, receiverCountry,
       weightKg, dimensions, serviceType, declaredValue,
-      eta, now, now
+      eta, now, now, adminId
     ).run()
 
     await c.env.DB.prepare(`
@@ -188,6 +220,14 @@ parcelsRouter.put('/:id', async (c) => {
   const id = c.req.param('id')
   const body = await c.req.json()
   const now = new Date().toISOString()
+
+  // Ownership check for regular admins — return 404 so there's no signal
+  if (!isSuperAdmin(c)) {
+    const owned = await c.env.DB.prepare(
+      'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
+    ).bind(id, getAdminId(c)).first()
+    if (!owned) return c.json({ error: 'Parcel not found' }, 404)
+  }
 
   const setClauses: string[] = []
   const vals: (string | number)[] = []
@@ -211,6 +251,15 @@ parcelsRouter.put('/:id', async (c) => {
 
 parcelsRouter.delete('/:id', async (c) => {
   const id = c.req.param('id')
+
+  // Ownership check for regular admins — return 404 so there's no signal
+  if (!isSuperAdmin(c)) {
+    const owned = await c.env.DB.prepare(
+      'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
+    ).bind(id, getAdminId(c)).first()
+    if (!owned) return c.json({ error: 'Parcel not found' }, 404)
+  }
+
   await c.env.DB.prepare('DELETE FROM tracking_events WHERE parcel_id = ?').bind(id).run()
   await c.env.DB.prepare('DELETE FROM parcels WHERE id = ?').bind(id).run()
   await c.env.CACHE.delete(`track:${id}`)
@@ -228,7 +277,13 @@ eventsRouter.post('/:parcelId', async (c) => {
   const { event_type, location, description } = await c.req.json()
   const now = new Date().toISOString()
 
-  const parcel = await c.env.DB.prepare('SELECT id FROM parcels WHERE id = ?').bind(parcelId).first()
+  // Ownership check
+  const ownershipClause = isSuperAdmin(c)
+    ? 'SELECT id FROM parcels WHERE id = ?'
+    : 'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
+  const ownershipBindings = isSuperAdmin(c) ? [parcelId] : [parcelId, getAdminId(c)]
+
+  const parcel = await c.env.DB.prepare(ownershipClause).bind(...ownershipBindings).first()
   if (!parcel) return c.json({ error: 'Parcel not found' }, 404)
 
   await c.env.DB.prepare(`
@@ -245,50 +300,34 @@ eventsRouter.post('/:parcelId', async (c) => {
 })
 
 /* =========================================================
-   ANALYTICS (ADMIN — PROTECTED)
+   ANALYTICS (ADMIN — PROTECTED, scoped)
    ========================================================= */
 const analyticsRouter = new Hono<{ Bindings: Env }>()
 analyticsRouter.use('*', authMiddleware())
 
 analyticsRouter.get('/', async (c) => {
+  const superAdmin = isSuperAdmin(c)
+  const adminId = getAdminId(c)
+
+  // Scope clause for regular admins
+  const scope = superAdmin ? '' : ` AND (created_by = '${adminId}' OR created_by IS NULL)`
+
   const [total, inTransit, deliveredToday, exceptions] = await Promise.all([
-    c.env.DB.prepare('SELECT COUNT(*) as n FROM parcels').first<{ n: number }>(),
-    c.env.DB.prepare("SELECT COUNT(*) as n FROM parcels WHERE current_status IN ('IN_TRANSIT','OUT_FOR_DELIVERY','DEPARTED_HUB','PICKED_UP')").first<{ n: number }>(),
-    c.env.DB.prepare("SELECT COUNT(*) as n FROM parcels WHERE current_status = 'DELIVERED' AND date(updated_at) = date('now')").first<{ n: number }>(),
-    c.env.DB.prepare("SELECT COUNT(*) as n FROM parcels WHERE current_status = 'EXCEPTION'").first<{ n: number }>(),
+    c.env.DB.prepare(`SELECT COUNT(*) as n FROM parcels WHERE 1=1${scope}`).first<{ n: number }>(),
+    c.env.DB.prepare(`SELECT COUNT(*) as n FROM parcels WHERE current_status IN ('IN_TRANSIT','OUT_FOR_DELIVERY','DEPARTED_HUB','PICKED_UP')${scope}`).first<{ n: number }>(),
+    c.env.DB.prepare(`SELECT COUNT(*) as n FROM parcels WHERE current_status = 'DELIVERED' AND date(updated_at) = date('now')${scope}`).first<{ n: number }>(),
+    c.env.DB.prepare(`SELECT COUNT(*) as n FROM parcels WHERE current_status = 'EXCEPTION'${scope}`).first<{ n: number }>(),
   ])
 
   const [statusBreakdown, shipmentsOverTime, topOrigins, topDest, revenueByService, recentActivity] = await Promise.all([
-    c.env.DB.prepare(
-      'SELECT current_status as status, COUNT(*) as count FROM parcels GROUP BY current_status ORDER BY count DESC'
-    ).all(),
-
-    c.env.DB.prepare(`
-      SELECT date(created_at) as date, COUNT(*) as count
-      FROM parcels WHERE created_at >= date('now', '-30 days')
-      GROUP BY date(created_at) ORDER BY date
-    `).all(),
-
-    c.env.DB.prepare(
-      'SELECT sender_country as country, COUNT(*) as count FROM parcels GROUP BY sender_country ORDER BY count DESC LIMIT 8'
-    ).all(),
-
-    c.env.DB.prepare(
-      'SELECT receiver_country as country, COUNT(*) as count FROM parcels GROUP BY receiver_country ORDER BY count DESC LIMIT 8'
-    ).all(),
-
-    c.env.DB.prepare(
-      'SELECT service_type as service, SUM(declared_value) as value, COUNT(*) as count FROM parcels GROUP BY service_type ORDER BY value DESC'
-    ).all(),
-
-    c.env.DB.prepare(`
-      SELECT te.parcel_id, te.event_type, te.location, te.timestamp, p.current_status
-      FROM tracking_events te JOIN parcels p ON te.parcel_id = p.id
-      ORDER BY te.timestamp DESC LIMIT 20
-    `).all(),
+    c.env.DB.prepare(`SELECT current_status as status, COUNT(*) as count FROM parcels WHERE 1=1${scope} GROUP BY current_status ORDER BY count DESC`).all(),
+    c.env.DB.prepare(`SELECT date(created_at) as date, COUNT(*) as count FROM parcels WHERE created_at >= date('now', '-30 days')${scope} GROUP BY date(created_at) ORDER BY date`).all(),
+    c.env.DB.prepare(`SELECT sender_country as country, COUNT(*) as count FROM parcels WHERE 1=1${scope} GROUP BY sender_country ORDER BY count DESC LIMIT 8`).all(),
+    c.env.DB.prepare(`SELECT receiver_country as country, COUNT(*) as count FROM parcels WHERE 1=1${scope} GROUP BY receiver_country ORDER BY count DESC LIMIT 8`).all(),
+    c.env.DB.prepare(`SELECT service_type as service, SUM(declared_value) as value, COUNT(*) as count FROM parcels WHERE 1=1${scope} GROUP BY service_type ORDER BY value DESC`).all(),
+    c.env.DB.prepare(`SELECT te.parcel_id, te.event_type, te.location, te.timestamp, p.current_status FROM tracking_events te JOIN parcels p ON te.parcel_id = p.id WHERE 1=1${scope.replace('AND (created_by', 'AND (p.created_by')} ORDER BY te.timestamp DESC LIMIT 20`).all(),
   ])
 
-  // Merge top countries (origins + destinations) by summing counts
   const countryMap = new Map<string, number>()
   for (const r of [...(topOrigins.results as any[]), ...(topDest.results as any[])]) {
     countryMap.set(r.country, (countryMap.get(r.country) ?? 0) + r.count)
@@ -298,13 +337,11 @@ analyticsRouter.get('/', async (c) => {
     .slice(0, 8)
     .map(([country, count]) => ({ country, count }))
 
-  // Synthetic 30-day avg delivery time (days) based on DELIVERED parcels
   const avgDeliveryTime = (shipmentsOverTime.results as any[]).map((r: any) => ({
     date: r.date,
     days: +(2 + Math.random() * 5).toFixed(1),
   }))
 
-  // Synthetic exception rate over time (%)
   const exceptionRate = (shipmentsOverTime.results as any[]).map((r: any) => ({
     date: r.date,
     rate: +(Math.random() * 4).toFixed(2),
@@ -333,26 +370,36 @@ analyticsRouter.get('/', async (c) => {
 })
 
 /* =========================================================
-   ADMINS (ADMIN — PROTECTED)
+   ADMINS (SUPER_ADMIN ONLY — PROTECTED)
    ========================================================= */
 const adminsRouter = new Hono<{ Bindings: Env }>()
 adminsRouter.use('*', authMiddleware())
 
+// All admin management routes require super_admin
+adminsRouter.use('*', async (c, next) => {
+  if (!isSuperAdmin(c)) return c.json({ error: 'Forbidden' }, 403)
+  await next()
+})
+
 adminsRouter.get('/', async (c) => {
   const admins = await c.env.DB.prepare(
-    'SELECT id, email, name, created_at FROM admins ORDER BY created_at ASC'
+    'SELECT id, email, name, role, created_at FROM admins ORDER BY created_at ASC'
   ).all()
   return c.json({ admins: admins.results })
 })
 
 adminsRouter.post('/', async (c) => {
-  const { email, name, password } = await c.req.json()
+  const { email, name, password, role = 'admin' } = await c.req.json()
   if (!email || !name || !password) {
     return c.json({ error: 'email, name, and password are required' }, 400)
   }
   if (password.length < 8) {
     return c.json({ error: 'Password must be at least 8 characters' }, 400)
   }
+  if (!['admin', 'super_admin'].includes(role)) {
+    return c.json({ error: 'Invalid role' }, 400)
+  }
+
   const existing = await c.env.DB.prepare('SELECT id FROM admins WHERE email = ?').bind(email).first()
   if (existing) return c.json({ error: 'An admin with that email already exists' }, 409)
 
@@ -361,15 +408,14 @@ adminsRouter.post('/', async (c) => {
   const now = new Date().toISOString()
 
   await c.env.DB.prepare(
-    'INSERT INTO admins (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)'
-  ).bind(id, email, name, hash, now).run()
+    'INSERT INTO admins (id, email, name, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(id, email, name, hash, role, now).run()
 
-  return c.json({ id, email, name, created_at: now }, 201)
+  return c.json({ id, email, name, role, created_at: now }, 201)
 })
 
 adminsRouter.delete('/:id', async (c) => {
   const id = c.req.param('id')
-  // Prevent deleting the last admin
   const count = await c.env.DB.prepare('SELECT COUNT(*) as n FROM admins').first<{ n: number }>()
   if ((count?.n ?? 0) <= 1) {
     return c.json({ error: 'Cannot delete the last admin account' }, 400)

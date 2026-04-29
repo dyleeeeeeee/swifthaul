@@ -24,7 +24,7 @@ export default function AdminSidebar({ onCollapse }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, adminName, adminEmail } = useAuth()
 
   function handleLogout() {
     logout()
@@ -127,17 +127,21 @@ export default function AdminSidebar({ onCollapse }: AdminSidebarProps) {
         </button>
 
         <div className="flex items-center gap-3 px-3 py-3 glass-sm" style={{ borderRadius: '12px' }}>
-          <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center"
-            style={{ background: 'var(--accent-secondary)' }}>
-            <User size={12} style={{ color: '#fff' }} />
+          <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center font-display text-xs"
+            style={{ background: 'var(--accent-secondary)', color: '#fff' }}>
+            {adminName ? adminName.charAt(0).toUpperCase() : <User size={12} />}
           </div>
           <AnimatePresence>
             {!collapsed && (
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="overflow-hidden">
-                <p className="text-xs font-body whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>Admin</p>
-                <p className="text-xs whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>admin@swifthaul.dev</p>
+                <p className="text-xs font-body whitespace-nowrap truncate max-w-[140px]" style={{ color: 'var(--text-primary)' }}>
+                  {adminName ?? 'Admin'}
+                </p>
+                <p className="text-xs whitespace-nowrap truncate max-w-[140px]" style={{ color: 'var(--text-muted)' }}>
+                  {adminEmail ?? ''}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

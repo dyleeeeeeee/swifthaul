@@ -4,11 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Save, Eye, EyeOff, Shield, Bell, Globe, Palette, Loader2, CheckCircle, Users, Trash2, UserPlus, Mail, User } from 'lucide-react'
 import GlassInput from '../../components/ui/GlassInput'
 import { api, AdminUser } from '../../lib/api'
+import { useAuth } from '../../contexts/AuthContext'
 import toast from 'react-hot-toast'
 
 type Tab = 'profile' | 'security' | 'notifications' | 'api' | 'admins'
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+const ALL_TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'profile',       label: 'Profile',       icon: Globe },
   { id: 'security',      label: 'Security',      icon: Shield },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -60,6 +61,8 @@ function Toggle({ label, description, value, onChange }: {
 }
 
 export default function Settings() {
+  const { role } = useAuth()
+  const TABS = role === 'super_admin' ? ALL_TABS : ALL_TABS.filter(t => t.id !== 'admins')
   const [tab, setTab] = useState<Tab>('profile')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)

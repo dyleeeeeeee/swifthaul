@@ -1,12 +1,26 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { api } from '../lib/api'
 
+type Role = 'super_admin' | 'admin'
+
 interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
+  role: Role | null
+  adminName: string | null
+  adminEmail: string | null
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   token: string | null
+}
+
+function decodeJWT(token: string): { sub: string; email: string; name?: string; role: Role } | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return payload
+  } catch {
+    return null
+  }
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -16,6 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
 
   const isAuthenticated = !!token
+
+  const decoded = token ? decodeJWT(token) : null
+  const role: Role | null = decoded?.role ?? null
+  const adminName: string | null = decoded?.name ?? null
+  const adminEmail: string | null = decoded?.email ?? null
 
   useEffect(() => {
     if (token) {
@@ -40,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout, token }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, role, adminName, adminEmail, login, logout, token }}>
       {children}
     </AuthContext.Provider>
   )
