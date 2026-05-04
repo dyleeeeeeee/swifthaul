@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 const COUNTRIES = [
   // Africa
   'Algeria', 'Angola', 'Benin', 'Botswana', 'Burkina Faso', 'Cameroon', 'Cape Verde',
-  'Côte d'Ivoire', 'DR Congo', 'Egypt', 'Ethiopia', 'Ghana', 'Guinea', 'Kenya',
+  'Côte d\'Ivoire', 'DR Congo', 'Egypt', 'Ethiopia', 'Ghana', 'Guinea', 'Kenya',
   'Liberia', 'Libya', 'Madagascar', 'Malawi', 'Mali', 'Mauritius', 'Morocco',
   'Mozambique', 'Namibia', 'Niger', 'Nigeria', 'Rwanda', 'Senegal', 'Sierra Leone',
   'Somalia', 'South Africa', 'South Sudan', 'Sudan', 'Tanzania', 'Togo', 'Tunisia',
