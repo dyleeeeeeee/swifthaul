@@ -8,10 +8,37 @@ import { copyToClipboard } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 const COUNTRIES = [
-  'United States', 'United Kingdom', 'Germany', 'France', 'Japan',
-  'Australia', 'Canada', 'Brazil', 'UAE', 'Singapore', 'Nigeria',
-  'India', 'China', 'South Korea', 'Mexico',
-]
+  // Africa
+  'Algeria', 'Angola', 'Benin', 'Botswana', 'Burkina Faso', 'Cameroon', 'Cape Verde',
+  'Côte d'Ivoire', 'DR Congo', 'Egypt', 'Ethiopia', 'Ghana', 'Guinea', 'Kenya',
+  'Liberia', 'Libya', 'Madagascar', 'Malawi', 'Mali', 'Mauritius', 'Morocco',
+  'Mozambique', 'Namibia', 'Niger', 'Nigeria', 'Rwanda', 'Senegal', 'Sierra Leone',
+  'Somalia', 'South Africa', 'South Sudan', 'Sudan', 'Tanzania', 'Togo', 'Tunisia',
+  'Uganda', 'Zambia', 'Zimbabwe',
+  // Americas
+  'Argentina', 'Bolivia', 'Brazil', 'Canada', 'Chile', 'Colombia', 'Costa Rica',
+  'Cuba', 'Dominican Republic', 'Ecuador', 'El Salvador', 'Guatemala', 'Honduras',
+  'Jamaica', 'Mexico', 'Nicaragua', 'Panama', 'Paraguay', 'Peru', 'Puerto Rico',
+  'Trinidad and Tobago', 'United States', 'Uruguay', 'Venezuela',
+  // Asia
+  'Afghanistan', 'Bangladesh', 'Cambodia', 'China', 'Hong Kong', 'India', 'Indonesia',
+  'Iran', 'Iraq', 'Israel', 'Japan', 'Jordan', 'Kazakhstan', 'Kuwait', 'Kyrgyzstan',
+  'Laos', 'Lebanon', 'Malaysia', 'Maldives', 'Mongolia', 'Myanmar', 'Nepal',
+  'North Korea', 'Oman', 'Pakistan', 'Palestine', 'Philippines', 'Qatar',
+  'Saudi Arabia', 'Singapore', 'South Korea', 'Sri Lanka', 'Syria', 'Taiwan',
+  'Tajikistan', 'Thailand', 'Turkey', 'Turkmenistan', 'UAE', 'Uzbekistan',
+  'Vietnam', 'Yemen',
+  // Europe
+  'Albania', 'Austria', 'Belarus', 'Belgium', 'Bosnia and Herzegovina', 'Bulgaria',
+  'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia', 'Finland', 'France',
+  'Germany', 'Greece', 'Hungary', 'Iceland', 'Ireland', 'Italy', 'Latvia',
+  'Lithuania', 'Luxembourg', 'Malta', 'Moldova', 'Montenegro', 'Netherlands',
+  'North Macedonia', 'Norway', 'Poland', 'Portugal', 'Romania', 'Russia', 'Serbia',
+  'Slovakia', 'Slovenia', 'Spain', 'Sweden', 'Switzerland', 'Ukraine',
+  'United Kingdom',
+  // Oceania
+  'Australia', 'Fiji', 'New Zealand', 'Papua New Guinea', 'Samoa', 'Tonga', 'Vanuatu',
+].sort()
 const SERVICE_TYPES = [
   { value: 'EXPRESS', label: 'Express Overnight', desc: 'Next-day delivery, guaranteed by 10:30 AM' },
   { value: 'STANDARD', label: 'Standard Freight', desc: 'Cost-effective, 3–5 business days' },
