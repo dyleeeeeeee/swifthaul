@@ -34,8 +34,10 @@ export function getStatusLabel(status: string): string {
   switch (status.toUpperCase()) {
     case 'CREATED':          return 'Created'
     case 'PICKED_UP':        return 'Picked Up'
-    case 'IN_TRANSIT':       return 'In Transit'
     case 'ARRIVED_HUB':      return 'Arrived at Hub'
+    case 'DEPARTED_HUB':     return 'Departed Hub'
+    case 'IN_TRANSIT':       return 'In Transit'
+    case 'CUSTOMS_CLEARED':  return 'Customs Cleared'
     case 'OUT_FOR_DELIVERY': return 'Out for Delivery'
     case 'DELIVERED':        return 'Delivered'
     case 'EXCEPTION':        return 'Exception'
@@ -45,7 +47,11 @@ export function getStatusLabel(status: string): string {
 
 export function getDotColor(status: string): string {
   switch (status.toUpperCase()) {
+    case 'PICKED_UP':        return '#00e5ff'
+    case 'ARRIVED_HUB':      return '#00b0ff'
+    case 'DEPARTED_HUB':     return '#40c4ff'
     case 'IN_TRANSIT':       return '#00e5ff'
+    case 'CUSTOMS_CLEARED':  return '#69f0ae'
     case 'OUT_FOR_DELIVERY': return '#ff6d00'
     case 'DELIVERED':        return '#00e676'
     case 'EXCEPTION':        return '#ff1744'
