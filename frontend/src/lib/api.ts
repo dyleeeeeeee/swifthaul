@@ -32,11 +32,20 @@ export const api = {
     request<{ success: boolean }>(`/parcels/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteParcel: (id: string) =>
     request<{ success: boolean }>(`/parcels/${id}`, { method: 'DELETE' }),
+  getTrackingEvents: (parcelId: string) =>
+    request<{ parcel: Parcel; events: TrackingEvent[] }>(`/events/${parcelId}`),
   addTrackingEvent: (parcelId: string, data: TrackingEventInput) =>
-    request<{ success: boolean }>(`/events/${parcelId}`, {
+    request<{ success: boolean; id: string }>(`/events/${parcelId}`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  updateTrackingEvent: (eventId: string, data: Partial<TrackingEventInput & { timestamp: string }>) =>
+    request<{ success: boolean }>(`/events/${eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteTrackingEvent: (eventId: string) =>
+    request<{ success: boolean }>(`/events/${eventId}`, { method: 'DELETE' }),
   getAnalytics: () => request<Analytics>('/analytics'),
   getAdmins: () => request<{ admins: AdminUser[] }>('/admins'),
   createAdmin: (data: { email: string; name: string; password: string }) =>

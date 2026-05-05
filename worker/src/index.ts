@@ -304,12 +304,10 @@ parcelsRouter.delete('/:id', async (c) => {
 const eventsRouter = new Hono<{ Bindings: Env }>()
 eventsRouter.use('*', authMiddleware())
 
-eventsRouter.post('/:parcelId', async (c) => {
+// GET all events for a parcel (admin view)
+eventsRouter.get('/:parcelId', async (c) => {
   const parcelId = c.req.param('parcelId').toUpperCase()
-  const { event_type, location, description } = await c.req.json()
-  const now = new Date().toISOString()
 
-  // Ownership check
   const ownershipClause = isSuperAdmin(c)
     ? 'SELECT id FROM parcels WHERE id = ?'
     : 'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
@@ -318,17 +316,131 @@ eventsRouter.post('/:parcelId', async (c) => {
   const parcel = await c.env.DB.prepare(ownershipClause).bind(...ownershipBindings).first()
   if (!parcel) return c.json({ error: 'Parcel not found' }, 404)
 
+  const events = await c.env.DB.prepare(
+    'SELECT * FROM tracking_events WHERE parcel_id = ? ORDER BY timestamp ASC'
+  ).bind(parcelId).all()
+
+  return c.json({ parcel, events: events.results })
+})
+
+// POST — add new event, accepts optional custom timestamp
+eventsRouter.post('/:parcelId', async (c) => {
+  const parcelId = c.req.param('parcelId').toUpperCase()
+  const { event_type, location, description, timestamp } = await c.req.json()
+  const now = new Date().toISOString()
+  const eventTime = timestamp ? new Date(timestamp).toISOString() : now
+
+  const ownershipClause = isSuperAdmin(c)
+    ? 'SELECT id FROM parcels WHERE id = ?'
+    : 'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
+  const ownershipBindings = isSuperAdmin(c) ? [parcelId] : [parcelId, getAdminId(c)]
+
+  const parcel = await c.env.DB.prepare(ownershipClause).bind(...ownershipBindings).first()
+  if (!parcel) return c.json({ error: 'Parcel not found' }, 404)
+
+  const eventId = crypto.randomUUID()
+
   await c.env.DB.prepare(`
     INSERT INTO tracking_events (id, parcel_id, event_type, location, description, timestamp)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(crypto.randomUUID(), parcelId, event_type, location, description ?? '', now).run()
+  `).bind(eventId, parcelId, event_type, location, description ?? '', eventTime).run()
 
-  await c.env.DB.prepare('UPDATE parcels SET current_status = ?, updated_at = ? WHERE id = ?')
-    .bind(event_type, now, parcelId).run()
+  // Update parcel status to the latest event (by timestamp)
+  const latest = await c.env.DB.prepare(
+    'SELECT event_type FROM tracking_events WHERE parcel_id = ? ORDER BY timestamp DESC LIMIT 1'
+  ).bind(parcelId).first<{ event_type: string }>()
+  if (latest) {
+    await c.env.DB.prepare('UPDATE parcels SET current_status = ?, updated_at = ? WHERE id = ?')
+      .bind(latest.event_type, now, parcelId).run()
+  }
 
   await c.env.CACHE.delete(`track:${parcelId}`)
 
-  return c.json({ success: true }, 201)
+  return c.json({ success: true, id: eventId }, 201)
+})
+
+// PUT — edit an existing event (type, location, description, timestamp)
+eventsRouter.put('/:eventId', async (c) => {
+  const eventId = c.req.param('eventId')
+  const body = await c.req.json()
+  const now = new Date().toISOString()
+
+  // Fetch event + verify parcel ownership
+  const event = await c.env.DB.prepare(
+    'SELECT * FROM tracking_events WHERE id = ?'
+  ).bind(eventId).first() as any
+  if (!event) return c.json({ error: 'Event not found' }, 404)
+
+  const parcelId = event.parcel_id
+  if (!isSuperAdmin(c)) {
+    const owned = await c.env.DB.prepare(
+      'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
+    ).bind(parcelId, getAdminId(c)).first()
+    if (!owned) return c.json({ error: 'Event not found' }, 404)
+  }
+
+  const setClauses: string[] = []
+  const vals: string[] = []
+
+  if (body.event_type !== undefined) { setClauses.push('event_type = ?'); vals.push(body.event_type) }
+  if (body.location    !== undefined) { setClauses.push('location = ?');    vals.push(body.location) }
+  if (body.description !== undefined) { setClauses.push('description = ?'); vals.push(body.description) }
+  if (body.timestamp   !== undefined) {
+    setClauses.push('timestamp = ?')
+    vals.push(new Date(body.timestamp).toISOString())
+  }
+
+  if (!setClauses.length) return c.json({ error: 'Nothing to update' }, 400)
+  vals.push(eventId)
+
+  await c.env.DB.prepare(
+    `UPDATE tracking_events SET ${setClauses.join(', ')} WHERE id = ?`
+  ).bind(...vals).run()
+
+  // Re-derive parcel status from the chronologically latest event
+  const latest = await c.env.DB.prepare(
+    'SELECT event_type FROM tracking_events WHERE parcel_id = ? ORDER BY timestamp DESC LIMIT 1'
+  ).bind(parcelId).first<{ event_type: string }>()
+  if (latest) {
+    await c.env.DB.prepare('UPDATE parcels SET current_status = ?, updated_at = ? WHERE id = ?')
+      .bind(latest.event_type, now, parcelId).run()
+  }
+
+  await c.env.CACHE.delete(`track:${parcelId}`)
+  return c.json({ success: true })
+})
+
+// DELETE — remove a single tracking event
+eventsRouter.delete('/:eventId', async (c) => {
+  const eventId = c.req.param('eventId')
+  const now = new Date().toISOString()
+
+  const event = await c.env.DB.prepare(
+    'SELECT * FROM tracking_events WHERE id = ?'
+  ).bind(eventId).first() as any
+  if (!event) return c.json({ error: 'Event not found' }, 404)
+
+  const parcelId = event.parcel_id
+  if (!isSuperAdmin(c)) {
+    const owned = await c.env.DB.prepare(
+      'SELECT id FROM parcels WHERE id = ? AND (created_by = ? OR created_by IS NULL)'
+    ).bind(parcelId, getAdminId(c)).first()
+    if (!owned) return c.json({ error: 'Event not found' }, 404)
+  }
+
+  await c.env.DB.prepare('DELETE FROM tracking_events WHERE id = ?').bind(eventId).run()
+
+  // Re-derive parcel status after deletion
+  const latest = await c.env.DB.prepare(
+    'SELECT event_type FROM tracking_events WHERE parcel_id = ? ORDER BY timestamp DESC LIMIT 1'
+  ).bind(parcelId).first<{ event_type: string }>()
+  if (latest) {
+    await c.env.DB.prepare('UPDATE parcels SET current_status = ?, updated_at = ? WHERE id = ?')
+      .bind(latest.event_type, now, parcelId).run()
+  }
+
+  await c.env.CACHE.delete(`track:${parcelId}`)
+  return c.json({ success: true })
 })
 
 /* =========================================================
