@@ -1,4 +1,4 @@
-const API_BASE = (import.meta as ImportMeta & { env: Record<string, string> }).env?.VITE_API_BASE ?? 'https://api.swifthaul.workers.dev/api'
+const API_BASE = (import.meta as ImportMeta & { env: Record<string, string> }).env?.VITE_API_BASE ?? 'https://api.transithaul.com/api'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('sh_token')
