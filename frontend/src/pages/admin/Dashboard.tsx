@@ -213,7 +213,7 @@ export default function Dashboard() {
               <span className="font-mono text-xs shrink-0 sm:hidden" style={{ color: 'var(--accent-primary)' }}>
                 {act.parcel_id.slice(-8)}
               </span>
-              <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-secondary)' }}>
+              <span className="text-xs flex-1 min-w-0 break-words" style={{ color: 'var(--text-secondary)' }}>
                 {act.event_type.replace(/_/g, ' ')} — {act.location}
               </span>
               <StatusBadge status={act.current_status} size="sm" />

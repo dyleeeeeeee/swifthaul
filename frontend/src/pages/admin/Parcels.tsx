@@ -159,7 +159,7 @@ function EventsTab({ parcelId, qc }: { parcelId: string; qc: ReturnType<typeof u
               <div className="grid grid-cols-3 gap-1.5">
                 {EVENT_TYPES.map(t=>(
                   <button key={t} type="button" onClick={()=>setNewEvt(e=>({...e,event_type:t}))}
-                    className="px-2 py-1.5 text-xs font-mono truncate transition-all"
+                    className="px-2 py-1.5 text-xs font-mono whitespace-normal leading-tight break-words transition-all"
                     style={{ borderRadius:'8px', background: newEvt.event_type===t?'rgba(0,229,255,0.1)':'var(--glass-bg)', border:`1px solid ${newEvt.event_type===t?'var(--accent-primary)':'var(--glass-border)'}`, color: newEvt.event_type===t?'var(--accent-primary)':'var(--text-secondary)' }}>
                     {t.replace(/_/g,' ')}
                   </button>
@@ -256,7 +256,7 @@ function EventsTab({ parcelId, qc }: { parcelId: string; qc: ReturnType<typeof u
                 <div className="grid grid-cols-3 gap-1.5">
                   {EVENT_TYPES.map(t=>(
                     <button key={t} type="button" onClick={()=>setEditForm(f=>f?{...f,event_type:t}:f)}
-                      className="px-2 py-1.5 text-xs font-mono truncate transition-all"
+                      className="px-2 py-1.5 text-xs font-mono whitespace-normal leading-tight break-words transition-all"
                       style={{ borderRadius:'8px', background: editForm.event_type===t?'rgba(0,229,255,0.1)':'var(--glass-bg)', border:`1px solid ${editForm.event_type===t?'var(--accent-primary)':'var(--glass-border)'}`, color: editForm.event_type===t?'var(--accent-primary)':'var(--text-secondary)' }}>
                       {t.replace(/_/g,' ')}
                     </button>
@@ -470,8 +470,8 @@ export default function Parcels() {
                       <td className="px-4 py-4 font-mono text-xs" style={{ color:'var(--accent-primary)' }}>{parcel.id}</td>
                       <td className="px-4 py-4 text-xs" style={{ color:'var(--text-primary)' }}>{parcel.sender_name}</td>
                       <td className="px-4 py-4 text-xs" style={{ color:'var(--text-primary)' }}>{parcel.receiver_name}</td>
-                      <td className="px-4 py-4 text-xs" style={{ color:'var(--text-secondary)' }}>{parcel.sender_country}</td>
-                      <td className="px-4 py-4 text-xs" style={{ color:'var(--text-secondary)' }}>{parcel.receiver_country}</td>
+                      <td className="px-4 py-4 text-xs min-w-[180px]" style={{ color:'var(--text-primary)' }}>{parcel.sender_country}<div className="text-[11px] mt-0.5 break-words" style={{ color:'var(--text-muted)' }}>{parcel.sender_address}</div></td>
+                      <td className="px-4 py-4 text-xs min-w-[180px]" style={{ color:'var(--text-primary)' }}>{parcel.receiver_country}<div className="text-[11px] mt-0.5 break-words" style={{ color:'var(--text-muted)' }}>{parcel.receiver_address}</div></td>
                       <td className="px-4 py-4"><StatusBadge status={parcel.current_status} size="sm"/></td>
                       <td className="px-4 py-4 font-mono text-xs" style={{ color:'var(--text-muted)' }}>{formatDateShort(parcel.created_at)}</td>
                       <td className="px-4 py-4">

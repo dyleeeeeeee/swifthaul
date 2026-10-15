@@ -91,7 +91,7 @@ function EditEventModal({ event, onClose, onSave, isPending }: EditEventModalPro
             <div className="grid grid-cols-3 gap-1.5">
               {EVENT_TYPES.map(t => (
                 <button key={t} type="button" onClick={() => setForm(f => ({ ...f, event_type: t }))}
-                  className="px-2 py-2 text-xs font-mono text-left transition-all truncate"
+                  className="px-2 py-2 text-xs font-mono text-left whitespace-normal leading-tight break-words transition-all"
                   style={{
                     borderRadius: '8px',
                     background: form.event_type === t ? 'rgba(0,229,255,0.1)' : 'var(--glass-bg)',
@@ -413,7 +413,7 @@ export default function UpdateTracking() {
                     <div className="grid grid-cols-3 gap-1.5">
                       {EVENT_TYPES.map(t => (
                         <button key={t} type="button" onClick={() => setNewEvent(e => ({ ...e, event_type: t }))}
-                          className="px-2 py-2 text-xs font-mono text-left transition-all truncate"
+                          className="px-2 py-2 text-xs font-mono text-left whitespace-normal leading-tight break-words transition-all"
                           style={{
                             borderRadius: '8px',
                             background: newEvent.event_type === t ? 'rgba(0,229,255,0.1)' : 'var(--glass-bg)',

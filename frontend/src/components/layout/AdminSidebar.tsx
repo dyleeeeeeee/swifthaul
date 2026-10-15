@@ -136,10 +136,10 @@ export default function AdminSidebar({ onCollapse }: AdminSidebarProps) {
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="overflow-hidden">
-                <p className="text-xs font-body whitespace-nowrap truncate max-w-[140px]" style={{ color: 'var(--text-primary)' }}>
+                <p className="text-xs font-body whitespace-nowrap truncate max-w-[140px]" title={adminName ?? 'Admin'} style={{ color: 'var(--text-primary)' }}>
                   {adminName ?? 'Admin'}
                 </p>
-                <p className="text-xs whitespace-nowrap truncate max-w-[140px]" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-xs whitespace-nowrap truncate max-w-[140px]" title={adminEmail ?? ''} style={{ color: 'var(--text-muted)' }}>
                   {adminEmail ?? ''}
                 </p>
               </motion.div>
