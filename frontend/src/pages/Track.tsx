@@ -162,9 +162,9 @@ function AccordionRow({ title, children }: { title: string; children: React.Reac
 
 function DataRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between py-1.5 text-sm border-b" style={{ borderColor: 'var(--glass-border)' }}>
-      <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-      <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{value}</span>
+    <div className="flex justify-between gap-4 py-1.5 text-sm border-b" style={{ borderColor: 'var(--glass-border)' }}>
+      <span className="shrink-0" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+      <span className="font-mono text-right break-words min-w-0" style={{ color: 'var(--text-primary)' }}>{value}</span>
     </div>
   )
 }
@@ -348,9 +348,9 @@ export default function Track() {
                     <div className="glass-sm p-4 space-y-2" style={{ borderRadius: '12px' }}>
                       {[
                         ['Sender', parcel.sender_name],
-                        ['Origin', `${parcel.sender_address.slice(0, 20)}…`],
+                        ['Origin', parcel.sender_address],
                         ['Receiver', parcel.receiver_name],
-                        ['Destination', `${parcel.receiver_address.slice(0, 20)}…`],
+                        ['Destination', parcel.receiver_address],
                       ].map(([l, v]) => <DataRow key={l} label={l} value={v} />)}
                     </div>
                   </div>
@@ -380,12 +380,12 @@ export default function Track() {
                 </AccordionRow>
                 <AccordionRow title="Sender Info">
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {parcel.sender_name} · {parcel.sender_country} · ••••••••••
+                    {parcel.sender_name} · {parcel.sender_address}, {parcel.sender_country}
                   </p>
                 </AccordionRow>
                 <AccordionRow title="Receiver Info">
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {parcel.receiver_name} · {parcel.receiver_country} · ••••••••••
+                    {parcel.receiver_name} · {parcel.receiver_address}, {parcel.receiver_country}
                   </p>
                 </AccordionRow>
                 <AccordionRow title="Insurance Details">
